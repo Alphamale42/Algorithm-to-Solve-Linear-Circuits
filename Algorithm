@@ -1,0 +1,52 @@
+
+import numpy as np
+Cdat= []
+with open('cir.txt', 'r') as file:
+  for line in file:
+    g1 = line.strip().split()
+    if len(g1) == 4:
+      Cdat.append(g1)
+
+# Determine the number of components
+Ncmp = len(Cdat)
+# determine the set of nodes
+ndSet = set()
+for n in range(Ncmp):
+  ndSet.add(Cdat[n][1])
+  ndSet.add(Cdat[n][2])
+ndSet.remove('0')
+print('Node set 0 removed',ndSet)
+Nnd = len(ndSet) # number of nodes
+N = Nnd+Ncmp
+A = np.zeros((N,N))
+B = np.zeros((N,1))
+# loop over node equations
+for i in range(Nnd):
+  for j in range(Ncmp):
+    if int(Cdat[j][1]) == i+1:
+      A[i,j] = 1
+    if int(Cdat[j][2]) == i+1:
+      A[i,j] = -1
+# Loop over component equations
+for i in range(Ncmp):
+  ndp = int(Cdat[i][1])
+  ndn = int(Cdat[i][2])
+  if ndp>0:
+    A[i+Nnd,Ncmp+ndp-1] = 1
+  if ndn>0:
+    A[i+Nnd,Ncmp+ndn-1] = -1
+  if Cdat[i][0] == 'V':
+    B[i+Nnd] = float(Cdat[i][3])
+  if Cdat[i][0] == 'R':
+    A[i+Nnd,i] = -float(Cdat[i][3])
+
+print('......\n')
+print('A',A)
+print('B',B)
+
+# Solve system of equations
+x = np.linalg.solve(A,B)
+print('x',x)
+
+The code essentially is a parsing of the netlist text file which then sets up the matrixes A and B.
+Example 2 assume two resistors in parallel each of 10 ohms and a voltage source of 5v.
